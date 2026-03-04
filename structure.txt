@@ -1,0 +1,11 @@
+digital-footprint-agent/
+├── src/
+│   ├── main.py              # FastAPI app (Endpoint: POST /api/audit/footprint)
+│   ├── config.py            # API keys & Rate Limits
+│   ├── models.py            # Pydantic schemas (AuditRequest, AuditReport)
+│   ├── prompts.py           # System prompts prioritizing Facebook/vibe/pain-points
+│   ├── token_tracker.py     # Sliding window RPM logic
+│   ├── search_tool.py       # DuckDuckGo snippet fetcher
+│   └── llm_client.py        # Logic to call Gemini (Tool) or Groq (DDG Injection)
+├── requirements.txt         # fastapi, uvicorn, httpx, pydantic, duckduckgo-search
+└── .env

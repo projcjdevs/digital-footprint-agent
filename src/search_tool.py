@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from src.config import Config
 
 def fetch_snippets(business_name: str, city: str, facebook_url: str | None = None) -> str:
@@ -18,7 +18,7 @@ def fetch_snippets(business_name: str, city: str, facebook_url: str | None = Non
                 results = ddg.text(
                     query,
                     max_results=Config.DDG_MAX_RESULTS,
-                    region="us-en:",
+                    region="us-en",
                 )
                 for r in results:
                     url = r.get("href", "")
@@ -26,7 +26,7 @@ def fetch_snippets(business_name: str, city: str, facebook_url: str | None = Non
                         continue
                     seen_urls.add(url)
 
-                    title = r.get("tite", "No title")
+                    title = r.get("title", "No title")
                     body = r.get("body", "No snippet")
                     all_snippets.append(f"[SOURCE: {title} - {body} ({url})]")
                 

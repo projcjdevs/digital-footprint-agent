@@ -1,0 +1,35 @@
+Input:
+
+    POST /api/audit/footprint
+    {
+        "business_name": "Casa Mojica",
+        "city": "Marikina",
+        "facebook_url": "http://www.facebook.com/casamojicaph"
+    }
+
+
+Output:
+
+    {
+    "business_name": "Casa Mojica",
+    "facebook_presence_detected": true,
+    "vibe_analysis": "Casa Mojica is a charming, family-style Filipino restaurant in Marikina, known for its warm, welcoming, and 'feels-like-home' atmosphere. It's a popular spot for family gatherings, celebrations, and relaxed meals, and can also host intimate events like weddings.",
+    "key_offerings": [
+        "Filipino cuisine (kare-kare, crispy pata, sisig, lechong baka, bibingka cheesecake)",
+        "Solo meals",
+        "Catering/large group orders",
+        "Event venue (intimate weddings, functions)",
+        "Food delivery (via Foodpanda)"
+    ],
+    "customer_pain_points": [
+        "Some customers perceive the pricing as 'a bit pricey'."
+    ],
+    "digital_presence_gaps": [
+        "Lack of a dedicated official website to showcase their menu, story, and booking options.",
+        "Limited detailed information on Instagram activity and engagement, despite having a presence mentioned in older articles.",
+        "No prominent presence or reviews found on major international review platforms like Yelp or TripAdvisor."
+    ],
+    "sentiment_summary": "positive",
+    "confidence_score": 0.9,
+    "model_used": "gemini"
+    }

@@ -34,15 +34,10 @@ async def get_audit_report(request: AuditRequest) -> AuditReport:
             groq_limiter.record()
             return _parse_response(result, model_used="groq")
         except Exception as e:
-            print(f"[ERROR] Groq also failed: {str(e)}")
+            raise RuntimeError(f"Groq also failed: {e}")
     else:
         wait = groq_limiter.wait_time()
-        print(f"[WARN] Both models rate-limited. Waiting {wait:.1f}s for Groq...")
-        time.sleep(wait + 0.5)
-        groq_limiter.record()
-        snippets = fetch_snippets(request.business_name, request.city, request.facebook_url)
-        result = await _call_groq(request, snippets)
-        return _parse_response(result, model_used="groq")
+        raise RuntimeError(f"Both models rate-limited. Try again in {wait:.0f}s.")
     
 async def _call_gemini(request: AuditRequest) -> str:
     url = f"{Config.GEMINI_BASE_URL}/{Config.GEMINI_MODEL}:generateContent"
@@ -78,7 +73,7 @@ async def _call_gemini(request: AuditRequest) -> str:
         data = response.json()
 
     try:
-        return data["candiates"][0]["content"]["parts"][0]["text"]
+        return data["candidates"][0]["content"]["parts"][0]["text"]
     except (KeyError, IndexError) as e:
         raise ValueError(f"Unexpected Gemini response structure: {e}\nRaw: {data}")
     
@@ -107,11 +102,11 @@ async def _call_groq(request: AuditRequest, search_context: str) -> str:
             }
         )
         response.raise_for_status()
-        Data = response.json()
+        data = response.json()
     
-    return Data["choices"][0]["message"]["content"]
+    return data["choices"][0]["message"]["content"]
 
-def _parse_response(raw_text: str, mode_used: str) -> AuditReport:
+def _parse_response(raw_text: str, model_used: str) -> AuditReport:
     
     text = raw_text.strip()
 
@@ -127,6 +122,6 @@ def _parse_response(raw_text: str, mode_used: str) -> AuditReport:
             f"Raw response:\n{raw_text[:500]}"
         )
     
-    data["model_used"] = mode_used
+    data["model_used"] = model_used
 
     return AuditReport(**data)

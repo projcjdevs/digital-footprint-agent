@@ -4,7 +4,7 @@ from src.config import Config
 class RateLimiter:
     def __init__(self, rpm_limit: int):
         self.rpm_limit = rpm_limit
-        self.last_refill_time = time.time()
+        self.timestamps: list[float] = [] 
     
     def _purge_old(self):
         cutoff = time.time() - 60

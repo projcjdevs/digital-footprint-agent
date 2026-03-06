@@ -2,34 +2,60 @@ Input:
 
     POST /api/audit/footprint
     {
-        "business_name": "Casa Mojica",
+        "business_name": "Trining's Kitchen Stories",
         "city": "Marikina",
-        "facebook_url": "http://www.facebook.com/casamojicaph"
+        "facebook_url": "https://www.facebook.com/TriningsPH"
     }
 
 
 Output:
 
-    {
-    "business_name": "Casa Mojica",
-    "facebook_presence_detected": true,
-    "vibe_analysis": "Casa Mojica is a charming, family-style Filipino restaurant in Marikina, known for its warm, welcoming, and 'feels-like-home' atmosphere. It's a popular spot for family gatherings, celebrations, and relaxed meals, and can also host intimate events like weddings.",
-    "key_offerings": [
-        "Filipino cuisine (kare-kare, crispy pata, sisig, lechong baka, bibingka cheesecake)",
-        "Solo meals",
-        "Catering/large group orders",
-        "Event venue (intimate weddings, functions)",
-        "Food delivery (via Foodpanda)"
-    ],
-    "customer_pain_points": [
-        "Some customers perceive the pricing as 'a bit pricey'."
-    ],
-    "digital_presence_gaps": [
-        "Lack of a dedicated official website to showcase their menu, story, and booking options.",
-        "Limited detailed information on Instagram activity and engagement, despite having a presence mentioned in older articles.",
-        "No prominent presence or reviews found on major international review platforms like Yelp or TripAdvisor."
-    ],
-    "sentiment_summary": "positive",
-    "confidence_score": 0.9,
-    "model_used": "gemini"
+[
+  {
+    "business_name": "Trining's Kitchen Stories",
+    "facebook_url": "https://www.facebook.com/TriningsPH",
+    "qualitative": {
+      "vibe_analysis": "Trining's Kitchen Stories offers a warm, family-friendly atmosphere with a strong sense of purpose, serving generous portions of Ilocano-inspired Filipino comfort food with a creative twist. It's praised for its spectacular ambiance, accommodating staff, and pet-friendly environment, often transforming into a volunteer kitchen during crises.",
+      "key_offerings": [
+        "Ilocano-inspired Filipino cuisine",
+        "Pakbet Ilocano",
+        "Dinakdakan",
+        "Bopis Be With U",
+        "Aligue Rice",
+        "Kimchi Binagoongan Rice",
+        "Crispy Tintadong Pusit",
+        "Party Platters"
+      ],
+      "customer_pain_points": [],
+      "digital_presence_gaps": [
+        "Lack of a dedicated official website to centralize information, menus, and booking.",
+        "Opportunity to optimize and consistently link all social media profiles (e.g., Instagram) across platforms for easier customer access.",
+        "Limited customer reviews on some third-party platforms like OpenRice, indicating potential for broader review generation strategies."
+      ],
+      "sentiment_summary": "positive",
+      "confidence_score": 0.8
+    },
+    "quantitative": {
+      "facebook": {
+        "followers": 6157,
+        "likes": 6157,
+        "phone": null,
+        "email": "trinings.ph@gmail.com",
+        "rating": null,
+        "rating_overall": null,
+        "review_count": null,
+        "address": "L12, B3, G. Fernando Avenue, Marikina City, Philippines, 1800",
+        "services": "Delivery,Contactless delivery,Takeout…",
+        "ad_status": "This Page isn't currently running ads.",
+        "creation_date": "November 5, 2023",
+        "category": "Restaurant"
+      },
+      "instagram": {
+        "username": "trinings_ph",
+        "followers": 2077,
+        "follows": 57,
+        "profile_url": "https://www.instagram.com/trinings_ph"
+      }
     }
+  }
+]

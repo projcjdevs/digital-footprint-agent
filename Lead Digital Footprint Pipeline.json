@@ -1,0 +1,450 @@
+{
+  "name": "Lead Digital Footprint Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "64c7d755-9074-4a61-b107-f5bfe3e6d67f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a60fdbaf-20d4-4f9e-bd97-a0b9d8298d6f",
+              "name": "=business_name",
+              "value": "Trining's Kitchen Stories",
+              "type": "string"
+            },
+            {
+              "id": "2448dd34-50aa-464a-8d9f-b53818cde5e0",
+              "name": "city",
+              "value": "Marikina",
+              "type": "string"
+            },
+            {
+              "id": "b5af578a-5190-432d-90aa-703685abe377",
+              "name": "facebook_url",
+              "value": "https://www.facebook.com/TriningsPH",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "fd8813a5-3fef-4745-88e0-f1a2ab900a9e",
+      "name": "Test Lead Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/api/audit/footprint",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"business_name\": \"={{ $json.business_name }}\",\n  \"city\": \"={{ $json.city }}\",\n  \"facebook_url\": \"={{ $json.facebook_url }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -96
+      ],
+      "id": "094e4fc1-4107-4336-97a0-8a0b846ee351",
+      "name": "Qualitative Audit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b6cbe8f4-4f6d-48e5-83fa-a2a250f59204",
+              "name": "facebook",
+              "value": "null",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        320
+      ],
+      "id": "dc239ebb-3157-454a-bc6b-b6dcfeb1ea08",
+      "name": "FB Data = Null"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b6cbe8f4-4f6d-48e5-83fa-a2a250f59204",
+              "name": "instagram",
+              "value": "null",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        496
+      ],
+      "id": "1701a2fe-8884-4602-9ef4-a2d8e02603f8",
+      "name": "IG Data = Null"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startUrls\": [\n    {\n      \"url\": \"{{ $('Test Lead Data').item.json.facebook_url }}\"\n    }\n  ],\n  \"maxPagesPerQuery\": 1,\n  \"maxReviews\": 0,\n  \"scrapeAbout\": true,\n  \"scrapeReviews\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        160
+      ],
+      "id": "e193d4d7-cde6-470f-9ac7-309716460830",
+      "name": "Apify - FB Page Scraper"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"usernames\": [\"{{ $('Apify - FB Page Scraper').item.json.instagram[0].username }}\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        336
+      ],
+      "id": "e09f0856-823c-4cf4-be33-265aa00e3154",
+      "name": "Apify - IG Profile Scraper"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "28ae1e2b-fe19-45f9-91c9-91b76da2fcd4",
+              "leftValue": "={{ $json.facebook_url }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        160
+      ],
+      "id": "2eb619ee-353f-465a-8370-45b13eb680ed",
+      "name": "Has FB Page?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4b5b4af9-0e5c-4b5e-918b-d7668e8568b0",
+              "leftValue": "={{ $json.instagram[0].username }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        336
+      ],
+      "id": "bc4f7b65-af61-448a-94bd-69f886a126cb",
+      "name": "Has IG Profile?"
+    },
+    {
+      "parameters": {
+        "content": "### Quantitative Audit - Uses Apify Scrapers",
+        "height": 544,
+        "width": 1056,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        112
+      ],
+      "id": "3f2d5113-593e-4dcf-b2f7-0aadc7a03edb",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Qualitative Audit - Uses Gemini Google Search",
+        "height": 240,
+        "width": 608,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -144
+      ],
+      "id": "675334be-f329-4c11-8aa5-1d6e27266eca",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Merge Master Payload",
+        "height": 240,
+        "width": 432,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -144
+      ],
+      "id": "c0aa4b6b-0c79-4ecd-95b9-f0997ebac58f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Manual Trigger",
+        "height": 800,
+        "width": 416,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -144
+      ],
+      "id": "6bccad19-1783-4e69-bedf-0790624fd08c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1056,
+        -96
+      ],
+      "id": "580cd573-4859-4361-90b5-6fdf846423a4",
+      "name": "Merge All Branch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const testLead = $('Test Lead Data').first().json;\nconst qualitative = $('Qualitative Audit').first().json;\n\nlet fbData = {};\nlet igData = {};\n\ntry { fbData = $('Apify - FB Page Scraper').first().json; } catch(e) {}\ntry { igData = $('Apify - IG Profile Scraper').first().json; } catch(e) {}\n\nreturn [{\n  json: {\n    business_name: testLead.business_name,\n    facebook_url: testLead.facebook_url, \n    qualitative: {\n      vibe_analysis: qualitative.vibe_analysis ?? null,\n      key_offerings: qualitative.key_offerings ?? null,\n      customer_pain_points: qualitative.customer_pain_points ?? null,\n      digital_presence_gaps: qualitative.digital_presence_gaps ?? null,\n      sentiment_summary: qualitative.sentiment_summary ?? null,\n      confidence_score: qualitative.confidence_score ?? null\n    },\n    quantitative: {\n      facebook: {\n        followers: fbData.followers ?? null,\n        likes: fbData.likes ?? null,\n        phone: fbData.phone ?? null,\n        email: fbData.email ?? null,\n        rating: fbData.rating ?? null,\n        rating_overall: fbData.ratingOverall ?? null,\n        review_count: fbData.ratingCount ?? null,\n        address: fbData.address ?? null,\n        services: fbData.services ?? null,\n        ad_status: fbData.ad_status ?? null,\n        creation_date: fbData.creation_date ?? null,\n        category: fbData.category ?? null\n      },\n      instagram: {\n        username: igData.userName ?? null,\n        followers: igData.followersCount ?? null,\n        follows: igData.followsCount ?? null,\n        profile_url: igData.userUrl ?? null\n      }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -96
+      ],
+      "id": "918e637f-d98d-4927-b2a8-fe84e93ff4ad",
+      "name": "Master Payload"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Test Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Has FB Page?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Qualitative Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - FB Page Scraper": {
+      "main": [
+        [
+          {
+            "node": "Has IG Profile?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Qualitative Audit": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - IG Profile Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Has FB Page?": {
+      "main": [
+        [
+          {
+            "node": "Apify - FB Page Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FB Data = Null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has IG Profile?": {
+      "main": [
+        [
+          {
+            "node": "Apify - IG Profile Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IG Data = Null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Branch": {
+      "main": [
+        [
+          {
+            "node": "Master Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dee4b27a-1a98-46ba-b58a-304cfa69f2d1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "715305857ae86e6e233a639d998e90b6dc4ce177710227853f05efc5fbe0fbe2"
+  },
+  "id": "Ha3FBepOHJpdr7b8",
+  "tags": []
+}

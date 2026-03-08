@@ -2,9 +2,10 @@ Input:
 
     POST /api/audit/footprint
     {
-        "business_name": "Trining's Kitchen Stories",
-        "city": "Marikina",
-        "facebook_url": "https://www.facebook.com/TriningsPH"
+        "business_name": "Panco Cafe",
+        "city": "BGC",
+        "facebook_url": "https://web.facebook.com/pancocafe.ph/",
+        "website_url": "https://www.pancocafe.com/"
     }
 
 
@@ -12,49 +13,74 @@ Output:
 
 [
   {
-    "business_name": "Trining's Kitchen Stories",
-    "facebook_url": "https://www.facebook.com/TriningsPH",
+    "business_name": "Panco Cafe",
+    "facebook_url": "https://web.facebook.com/pancocafe.ph/",
+    "website_url": "https://www.pancocafe.com/",
     "qualitative": {
-      "vibe_analysis": "Trining's Kitchen Stories offers a warm, family-friendly atmosphere with a strong sense of purpose, serving generous portions of Ilocano-inspired Filipino comfort food with a creative twist. It's praised for its spectacular ambiance, accommodating staff, and pet-friendly environment, often transforming into a volunteer kitchen during crises.",
+      "vibe_analysis": "Panco Cafe offers a modern, minimalist, and bright ambiance, blending Melbourne's vibrant coffee culture with the rich traditions of Filipino cuisine. It's designed as a work-friendly and cozy spot, ideal for remote work, casual hangouts, or small meetings.",
       "key_offerings": [
-        "Ilocano-inspired Filipino cuisine",
-        "Pakbet Ilocano",
-        "Dinakdakan",
-        "Bopis Be With U",
-        "Aligue Rice",
-        "Kimchi Binagoongan Rice",
-        "Crispy Tintadong Pusit",
-        "Party Platters"
+        "Melbourne-roasted coffee (Market Lane beans)",
+        "Elevated/modern Filipino fusion dishes",
+        "Filipino-inspired non-coffee drinks (e.g., Ube Pinipig, Kalma)",
+        "All-day breakfast and brunch items (e.g., Breakfast Brisket, Special Inasal)",
+        "Function rooms for events and meetings",
+        "Panco Cart for catering events",
+        "Bulk orders/trays",
+        "Desserts (e.g., Panco's Kakanin, Ube Cake, Turon ala mode)"
       ],
-      "customer_pain_points": [],
+      "customer_pain_points": [
+        "Coffee quality sometimes falls short of 'Melbourne level' expectations",
+        "Tiramisu Latte tasted like regular coffee to one reviewer",
+        "Special Inasal was described as 'nothing special' by a customer",
+        "Ube Pinipig was considered too sweet by some",
+        "Bang Bang Cauliflower could benefit from a lighter side sauce to prevent it from being cloying",
+        "Mixed reviews on service quality and food temperature consistency"
+      ],
       "digital_presence_gaps": [
-        "Lack of a dedicated official website to centralize information, menus, and booking.",
-        "Opportunity to optimize and consistently link all social media profiles (e.g., Instagram) across platforms for easier customer access.",
-        "Limited customer reviews on some third-party platforms like OpenRice, indicating potential for broader review generation strategies."
+        "Lack of detailed information on Facebook page response time to customer inquiries and comments.",
+        "Limited explicit data on follower engagement metrics (likes, shares, comments) on Facebook posts.",
+        "Absence of a strong, independent official website providing comprehensive information, menu, and online ordering options.",
+        "Minimal to no presence or recent activity detected on major international review platforms like Yelp or TripAdvisor for the BGC branch.",
+        "No clear strategy for addressing or responding to negative feedback on platforms like Reddit, where a post titled 'Panco Cafe — never again' appeared without further context or resolution."
       ],
       "sentiment_summary": "positive",
-      "confidence_score": 0.8
+      "confidence_score": 0.9
     },
     "quantitative": {
       "facebook": {
-        "followers": 6157,
-        "likes": 6157,
-        "phone": null,
-        "email": "trinings.ph@gmail.com",
-        "rating": null,
+        "followers": 3258,
+        "likes": 3258,
+        "phone": "+63 943 256 9033",
+        "email": "pancocafe.ph@gmail.com",
+        "rating": "Not yet rated (4 Reviews)",
         "rating_overall": null,
-        "review_count": null,
-        "address": "L12, B3, G. Fernando Avenue, Marikina City, Philippines, 1800",
-        "services": "Delivery,Contactless delivery,Takeout…",
-        "ad_status": "This Page isn't currently running ads.",
-        "creation_date": "November 5, 2023",
+        "review_count": 4,
+        "address": "110 Don C. Palanca, Legazpi, Makati, Philippines, 1223",
+        "services": "Dine-in,Outdoor seating",
+        "ad_status": "This Page is currently running ads.",
+        "creation_date": "July 24, 2022",
         "category": "Restaurant"
       },
       "instagram": {
-        "username": "trinings_ph",
-        "followers": 2077,
-        "follows": 57,
-        "profile_url": "https://www.instagram.com/trinings_ph"
+        "username": null,
+        "followers": null,
+        "follows": null,
+        "profile_url": null
+      },
+      "website": {
+        "url": "https://www.pancocafe.com/",
+        "overall_score": 70,
+        "design_score": 80,
+        "functionality_score": 60,
+        "seo_score": 60,
+        "mobile_readiness": 80,
+        "summary": "The website has a visually appealing design and clear navigation. However, there are some issues with functionality and SEO.",
+        "top_issues": [
+          "No clear call-to-actions on the homepage",
+          "No meta description",
+          "Slow page load time (4724ms)"
+        ],
+        "recommendation": "Improve functionality by adding clear CTAs, optimize images for faster load times, and add meta descriptions for better SEO."
       }
     }
   }

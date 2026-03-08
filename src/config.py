@@ -16,6 +16,9 @@ class Config:
     GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/models"
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1/chat/completions"
 
+    SUPABASE_URL = os.getenv('SUPABASE_URL')
+    SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+
     DDG_MAX_RESULTS = 8
 
     PORT = int(os.getenv('PORT', 3001))

@@ -231,7 +231,7 @@
     {
       "parameters": {
         "content": "### Quantitative Audit - Uses Apify Scrapers",
-        "height": 544,
+        "height": 544,    
         "width": 1056,
         "color": 7
       },

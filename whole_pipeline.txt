@@ -1,0 +1,20 @@
+blacklist table    → upstream filter (is this lead already blacklisted?)
+lead_evaluations   → RAG memory (vector similarity for accepted leads)
+blacklist          → ALSO has embeddings (RAG memory for rejected leads)
+
+Flow:
+GMaps lead comes in
+    │
+    ▼
+CHECK blacklist by name/place_id  ← simple text lookup
+    │ found → discard
+    │ not found → proceed
+    ▼
+[enrichment pipeline]
+    │
+    ▼
+CHECK lead_evaluations by vector  ← semantic similarity
+CHECK blacklist by vector          ← semantic similarity
+    │ returns RAG context
+    ▼
+[evaluator gets both contexts]

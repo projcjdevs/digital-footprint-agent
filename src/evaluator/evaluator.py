@@ -4,13 +4,31 @@ from groq import Groq
 from src.config import Config
 from src.evaluator.prompts import EVALUATOR_SYSTEM_PROMPT, EVALUATOR_USER_PROMPT
 from src.evaluator.supabase_client import get_rag_context
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
-
 client = Groq(api_key=Config.GROQ_API_KEY)
 
+
+def _compute_fb_age(creation_date_str: str) -> str:
+
+    try:
+        created = datetime.strptime(creation_date_str, "%B %d, %Y")
+        now = datetime.now()
+        total_months = (now.year - created.year) * 12 + (now.month - created.month)
+        years = total_months // 12
+        months = total_months % 12
+        parts = []
+        if years > 0:
+            parts.append(f"{years} year{'s' if years > 1 else ''}")
+        if months > 0:
+            parts.append(f"{months} month{'s' if months > 1 else ''}")
+        return f"Page created on {creation_date_str} ({' and '.join(parts)} ago)"
+    except Exception:
+        return creation_date_str or "N/A"
+
+
 def _flatten(payload: dict) -> dict:
-    """Safely flatten master payload into prompt variables"""
     quali = payload.get("qualitative") or {}
     fb = (payload.get("quantitative") or {}).get("facebook") or {}
     ig = (payload.get("quantitative") or {}).get("instagram") or {}
@@ -20,6 +38,8 @@ def _flatten(payload: dict) -> dict:
         if val is None or val == "":
             return "N/A"
         return val
+
+    fb_age = _compute_fb_age(fb.get("creation_date", ""))
 
     return {
         "business_name": safe(payload.get("business_name")),
@@ -42,7 +62,7 @@ def _flatten(payload: dict) -> dict:
         "fb_address": safe(fb.get("address")),
         "fb_services": safe(fb.get("services")),
         "fb_ad_status": safe(fb.get("ad_status")),
-        "fb_creation_date": safe(fb.get("creation_date")),
+        "fb_creation_date": fb_age,                         # ← human readable age
         "fb_category": safe(fb.get("category")),
         "ig_username": safe(ig.get("username")),
         "ig_followers": safe(ig.get("followers")),
@@ -59,61 +79,133 @@ def _flatten(payload: dict) -> dict:
     }
 
 
-async def evaluate_lead(payload: dict) -> dict:
-    """
-    Full evaluation pipeline:
-    1. Flatten master payload
-    2. Get RAG context from Supabase
-    3. Build prompt
-    4. Call Groq LLaMA 70B
-    5. Return structured evaluation
-    """
+def _build_business_snapshot(payload: dict, flat: dict) -> dict:
+    """Clean structured snapshot for the output — replaces lead_snapshot"""
+    fb = (payload.get("quantitative") or {}).get("facebook") or {}
+    ig = (payload.get("quantitative") or {}).get("instagram") or {}
+    web = (payload.get("quantitative") or {}).get("website") or {}
+    quali = payload.get("qualitative") or {}
 
+    return {
+        "identity": {
+            "business_name": payload.get("business_name"),
+            "city": payload.get("city"),
+            "category": fb.get("category"),
+            "facebook_url": payload.get("facebook_url"),
+            "website_url": payload.get("website_url"),
+            "fb_address": fb.get("address"),
+        },
+        "facebook": {
+            "followers": fb.get("followers"),
+            "likes": fb.get("likes"),
+            "email": fb.get("email"),
+            "phone": fb.get("phone"),
+            "rating": fb.get("rating"),
+            "review_count": fb.get("review_count"),
+            "services": fb.get("services"),
+            "ad_status": fb.get("ad_status"),
+            "page_age": flat["fb_creation_date"],           # ← "Created July 24 2022 (3 years ago)"
+            "category": fb.get("category"),
+        },
+        "instagram": {
+            "username": ig.get("username"),
+            "followers": ig.get("followers"),
+            "follows": ig.get("follows"),
+            "profile_url": ig.get("profile_url"),
+        },
+        "website_audit": {
+            "url": web.get("url"),
+            "overall_score": web.get("overall_score"),
+            "design_score": web.get("design_score"),
+            "functionality_score": web.get("functionality_score"),
+            "seo_score": web.get("seo_score"),
+            "mobile_readiness": web.get("mobile_readiness"),
+            "summary": web.get("summary"),
+            "top_issues": web.get("top_issues"),
+            "recommendation": web.get("recommendation"),
+        },
+        "qualitative": {
+            "vibe_analysis": quali.get("vibe_analysis"),
+            "key_offerings": quali.get("key_offerings"),
+            "customer_pain_points": quali.get("customer_pain_points"),
+            "digital_presence_gaps": quali.get("digital_presence_gaps"),
+            "sentiment_summary": quali.get("sentiment_summary"),
+            "confidence_score": quali.get("confidence_score"),
+        }
+    }
+
+
+async def evaluate_lead(payload: dict) -> dict:
     flat = _flatten(payload)
 
-    # Step 1: RAG context (cold start safe)
+    # RAG context (cold start safe)
     rag = await get_rag_context(
         business_name=flat["business_name"],
         category=flat["category"]
     )
 
-    # Step 2: Build prompts with RAG injected
     system_prompt = EVALUATOR_SYSTEM_PROMPT.format(
         rag_success=rag["success_synthesis"],
         rag_blacklist=rag["blacklist_synthesis"]
     )
     user_prompt = EVALUATOR_USER_PROMPT.format(**flat)
 
-    # Step 3: Call Groq
     logger.info(f"Evaluating: {flat['business_name']}")
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=Config.GROQ_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        temperature=0.2,         # low temp = consistent, data-driven scoring
-        max_tokens=2000,
+        temperature=0.2,
+        max_tokens=2500,
         response_format={"type": "json_object"}
     )
 
     raw = response.choices[0].message.content
     evaluation = json.loads(raw)
 
-    # Step 4: Attach metadata for downstream use
-    evaluation["rag_context"] = {
-        "success_match": rag.get("success_business"),
-        "success_score": rag.get("success_score"),
-        "success_similarity": rag.get("success_similarity"),
-        "blacklist_match": rag.get("blacklist_name"),
-        "blacklist_similarity": rag.get("blacklist_similarity")
+    # Build clean output
+    result = {
+        # Core decision
+        "agency_fit_score": evaluation.get("agency_fit_score"),
+        "priority_level": evaluation.get("priority_level"),
+        "status_recommendation": evaluation.get("status_recommendation"),
+
+        # Score details
+        "score_breakdown": evaluation.get("score_breakdown"),
+
+        # Intelligence
+        "executive_summary": evaluation.get("executive_summary"),
+        "the_synthesis": evaluation.get("the_synthesis"),
+        "pitch_angle": evaluation.get("pitch_angle"),
+        "services_to_offer": evaluation.get("services_to_offer"),
+
+        # Research
+        "strengths": evaluation.get("strengths"),
+        "weaknesses": evaluation.get("weaknesses"),
+        "opportunities": evaluation.get("opportunities"),
+        "pain_points": evaluation.get("pain_points"),
+
+        # RAG reasoning
+        "rag_reasoning": {
+            "success_match": rag.get("success_business"),
+            "success_score": rag.get("success_score"),
+            "success_similarity": rag.get("success_similarity"),
+            "success_reasoning": evaluation.get("success_similarity_reasoning"),
+            "blacklist_match": rag.get("blacklist_name"),
+            "blacklist_similarity": rag.get("blacklist_similarity"),
+            "blacklist_reasoning": evaluation.get("blacklist_similarity_reasoning"),
+        },
+
+        # Clean business data (NOT the raw input echo)
+        "business_snapshot": _build_business_snapshot(payload, flat),
     }
-    evaluation["lead_snapshot"] = payload
 
     logger.info(
-        f"Evaluation done: {flat['business_name']} "
-        f"→ Score: {evaluation.get('agency_fit_score')} "
-        f"→ {evaluation.get('status_recommendation')}"
+        f"Done: {flat['business_name']} "
+        f"→ Score: {result['agency_fit_score']} "
+        f"→ {result['status_recommendation']}"
     )
 
-    return evaluation
+    return result

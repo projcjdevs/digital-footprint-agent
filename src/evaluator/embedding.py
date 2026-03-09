@@ -14,6 +14,5 @@ def get_model() -> SentenceTransformer:
     return _model
 
 def embed_text(text: str) -> list[float]:
-    """Convert any text into a 384-dim vector"""
     model = get_model()
     return model.encode(text).tolist()

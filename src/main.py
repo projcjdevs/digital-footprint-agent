@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi import Body
+from typing import Any
 from src.models import AuditReport, AuditRequest
 from src.llm_client import get_audit_report
 from src.evaluator.evaluator import evaluate_lead
@@ -15,7 +17,7 @@ app = FastAPI(
 async def health_check():
     return {"status": "ok", "port": Config.PORT}
 
-@app.post("/api/audit/footprint", response_model=AuditReport)
+@app.post("/api/audit/footprint", response_model=AuditReport)       
 async def audit_footprint(request: AuditRequest):
     try:
         report = await get_audit_report(request)
@@ -27,12 +29,13 @@ async def audit_footprint(request: AuditRequest):
 
 
 @app.post("/api/audit/evaluate")
-async def evaluate_footprint(payload: dict):
-    """
-    Takes full Master Payload from N8N.
-    Returns structured evaluation with score, pitch, synthesis.
-    """
+async def evaluate_footprint(payload: Any = Body(...)):  
     try:
+        if isinstance(payload, list):
+            if len(payload) == 0:
+                raise HTTPException(status_code=400, detail="Empty payload array")
+            payload = payload[0]
+
         evaluation = await evaluate_lead(payload)
         return evaluation
     except Exception as e:
@@ -40,12 +43,7 @@ async def evaluate_footprint(payload: dict):
 
 
 @app.post("/api/decision/store")
-async def store_decision(body: dict):
-    """
-    Called after human Telegram decision.
-    Stores evaluation + embedding in Supabase for future RAG.
-    Body: { lead_data: {...}, evaluation: {...}, decision: 'accepted'|'rejected' }
-    """
+async def store_decision(body: dict = Body(...)):       
     try:
         lead_data = body.get("lead_data", {})
         evaluation = body.get("evaluation", {})

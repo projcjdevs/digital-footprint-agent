@@ -1,0 +1,850 @@
+{
+  "name": "Lead Digital Footprint Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "64c7d755-9074-4a61-b107-f5bfe3e6d67f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a60fdbaf-20d4-4f9e-bd97-a0b9d8298d6f",
+              "name": "=business_name",
+              "value": "Tasa Barbershop ",
+              "type": "string"
+            },
+            {
+              "id": "2448dd34-50aa-464a-8d9f-b53818cde5e0",
+              "name": "city",
+              "value": "Marikina",
+              "type": "string"
+            },
+            {
+              "id": "b5af578a-5190-432d-90aa-703685abe377",
+              "name": "facebook_url",
+              "value": "https://www.facebook.com/tasabarbershop/?ref=_xav_ig_profile_page_web#",
+              "type": "string"
+            },
+            {
+              "id": "9376eaf7-c79f-414f-be87-48b250eb1273",
+              "name": "website_url",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "fd8813a5-3fef-4745-88e0-f1a2ab900a9e",
+      "name": "Test Lead Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/api/audit/footprint",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"business_name\": \"={{ $json.business_name }}\",\n  \"city\": \"={{ $json.city }}\",\n  \"facebook_url\": \"={{ $json.facebook_url }}\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -80
+      ],
+      "id": "094e4fc1-4107-4336-97a0-8a0b846ee351",
+      "name": "Qualitative Audit",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startUrls\": [\n    {\n      \"url\": \"{{ $('Test Lead Data').item.json.facebook_url }}\"\n    }\n  ],\n  \"maxPagesPerQuery\": 1,\n  \"maxReviews\": 0,\n  \"scrapeAbout\": true,\n  \"scrapeReviews\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        224
+      ],
+      "id": "e193d4d7-cde6-470f-9ac7-309716460830",
+      "name": "Apify - FB Page Scraper"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"usernames\": [\"{{ $('Apify - FB Page Scraper').item.json.instagram[0].username }}\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        224
+      ],
+      "id": "e09f0856-823c-4cf4-be33-265aa00e3154",
+      "name": "Apify - IG Profile Scraper"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "28ae1e2b-fe19-45f9-91c9-91b76da2fcd4",
+              "leftValue": "={{ $json.facebook_url }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        240
+      ],
+      "id": "2eb619ee-353f-465a-8370-45b13eb680ed",
+      "name": "Has FB Page?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4b5b4af9-0e5c-4b5e-918b-d7668e8568b0",
+              "leftValue": "={{ $json.instagram[0].username }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        224
+      ],
+      "id": "bc4f7b65-af61-448a-94bd-69f886a126cb",
+      "name": "Has IG Profile?"
+    },
+    {
+      "parameters": {
+        "content": "### Quantitative Audit - Uses Apify Scrapers",
+        "height": 544,
+        "width": 1216,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        112
+      ],
+      "id": "3f2d5113-593e-4dcf-b2f7-0aadc7a03edb",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Qualitative Audit - Uses Gemini Google Search",
+        "height": 240,
+        "width": 608,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -144
+      ],
+      "id": "675334be-f329-4c11-8aa5-1d6e27266eca",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Merge Master Payload",
+        "height": 240,
+        "width": 592,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -144
+      ],
+      "id": "c0aa4b6b-0c79-4ecd-95b9-f0997ebac58f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Manual Trigger",
+        "height": 1184,
+        "width": 400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -528
+      ],
+      "id": "6bccad19-1783-4e69-bedf-0790624fd08c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1280,
+        -96
+      ],
+      "id": "580cd573-4859-4361-90b5-6fdf846423a4",
+      "name": "Merge All Branch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet websiteData = { audit_result: null, website_url: null, _audit_available: false };\nlet igData      = { _ig_available: false, _fb_data: null };\nlet qualData    = { _qualitative_available: false };\n\nfor (const item of items) {\n  const d = item.json;\n  if (!d || !d.source) continue;\n  if (d.source === \"website_audit\") websiteData = d;\n  if (d.source === \"instagram\")     igData      = d;\n  if (d.source === \"qualitative\")   qualData    = d;\n}\n\nconst fbData = igData._fb_data || {};\n\nlet lead = {};\ntry { lead = $('Test Lead Data').first().json || {}; } catch(e) {}\n\n// Safely get audit sub-fields\nconst audit = websiteData.audit_result || {};\n\nreturn [{\n  json: {\n    // === IDENTITY ===\n    business_name: lead.business_name ?? qualData.business_name ?? null,\n    city:          lead.city          ?? null,\n    category:      lead.category      ?? fbData.category ?? null,\n    facebook_url:  lead.facebook_url  ?? null,\n    website_url:   lead.website_url   ?? websiteData.website_url ?? null,\n    place_id:      lead.place_id      ?? null,\n\n    // === DATA FLAGS (for evaluator null handling) ===\n    _data_flags: {\n      has_website:          !!(lead.website_url),\n      has_website_audit:    !!(websiteData._audit_available),\n      has_facebook:         !!(lead.facebook_url),\n      has_facebook_data:    !!(fbData._fb_available),\n      has_instagram_data:   !!(igData._ig_available),\n      has_qualitative_data: !!(qualData._qualitative_available)\n    },\n\n    // === QUALITATIVE (flat — matches prompt fields) ===\n    vibe_analysis:         qualData.vibe_analysis         ?? null,\n    key_offerings:         qualData.key_offerings         ?? null,\n    customer_pain_points:  qualData.customer_pain_points  ?? null,\n    digital_presence_gaps: qualData.digital_presence_gaps ?? null,\n    sentiment_summary:     qualData.sentiment_summary     ?? null,\n    confidence_score:      qualData.confidence_score      ?? null,\n\n    // === FACEBOOK (flat — matches prompt fields) ===\n    fb_followers:     fbData.followers     ?? null,\n    fb_likes:         fbData.likes         ?? null,\n    fb_email:         fbData.email         ?? null,\n    fb_phone:         fbData.phone         ?? null,\n    fb_rating:        fbData.rating        ?? null,\n    fb_review_count:  fbData.ratingCount   ?? null,\n    fb_address:       fbData.address       ?? null,\n    fb_services:      fbData.services      ?? null,\n    fb_ad_status:     fbData.ad_status     ?? null,\n    fb_creation_date: fbData.creation_date ?? null,\n    fb_category:      fbData.category      ?? null,\n\n    // === INSTAGRAM (flat — matches prompt fields) ===\n    ig_username:    igData.userName      ?? null,\n    ig_followers:   igData.followersCount ?? null,\n    ig_follows:     igData.followsCount  ?? null,\n    ig_profile_url: igData.userUrl       ?? null,\n\n    // === WEBSITE AUDIT (flat — matches prompt fields) ===\n    web_overall_score:       audit.overall_score       ?? null,\n    web_design_score:        audit.design_score        ?? null,\n    web_functionality_score: audit.functionality_score ?? null,\n    web_seo_score:           audit.seo_score           ?? null,\n    web_mobile_readiness:    audit.mobile_readiness    ?? null,\n    web_summary:             audit.summary             ?? null,\n    web_top_issues:          audit.top_issues          ?? null,\n    web_recommendation:      audit.recommendation      ?? null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -80
+      ],
+      "id": "918e637f-d98d-4927-b2a8-fe84e93ff4ad",
+      "name": "Master Payload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $('Test Lead Data').item.json.website_url }}\"\n}",
+        "options": {
+          "timeout": 25000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -448
+      ],
+      "id": "94cd3a5e-87de-4a0c-8d9d-5a72d9e79151",
+      "name": "HTTP Request to Web Scraper",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "92d79748-9b3b-494b-8c90-3007be82ff83",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -448
+      ],
+      "id": "3c900832-d7ed-49fc-a8e8-4ab2d26ff84e",
+      "name": "Audit Success?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"meta-llama/llama-4-scout-17b-16e-instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a website quality auditor for a digital marketing agency. Analyze the provided website data and screenshots. Return a JSON object with these fields:\\n\\n- overall_score (0-100): overall website quality\\n- design_score (0-100): visual design and professionalism\\n- functionality_score (0-100): navigation, CTAs, forms\\n- seo_score (0-100): meta tags, structured data, SSL\\n- mobile_readiness (0-100): viewport meta, responsive indicators\\n- summary (string): 2-3 sentence assessment\\n- top_issues (array of strings): top 3 problems found\\n- recommendation (string): what you'd pitch this business\\n\\nReturn ONLY valid JSON, no markdown, no explanation.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Audit this website: {{ $json.resolved_url }}\\n\\nTechnical signals:\\n- SSL: {{ $json.technical.has_ssl }}\\n- Title length: {{ $json.technical.title_length }}\\n- Has meta description: {{ $json.technical.has_meta_description }}\\n- Has viewport meta: {{ $json.technical.has_viewport_meta }}\\n- CTA count: {{ $json.technical.cta_count }}\\n- Has contact form: {{ $json.technical.has_contact_form }}\\n- Has phone number: {{ $json.technical.has_phone_number }}\\n- Has email: {{ $json.technical.has_email }}\\n- Nav items: {{ $json.technical.nav_item_count }}\\n- Structured data: {{ $json.technical.has_structured_data }}\\n- Page load time: {{ $json.performance.page_load_time_ms }}ms\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/jpeg;base64,{{ $json.screenshots.hero }}\"\n          }\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/jpeg;base64,{{ $json.screenshots.mid }}\"\n          }\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:image/jpeg;base64,{{ $json.screenshots.footer }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"temperature\": 0.3,\n  \"max_tokens\": 1000,\n  \"response_format\": { \"type\": \"json_object\" }\n}",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        -464
+      ],
+      "id": "ef86b598-0da5-4e75-bbbc-5c2d4bdddd39",
+      "name": "Groq Vision Analysis",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "nwxvjTpvqUZY5mBv",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3dab298e-d41d-4235-88ac-7a268fdf4a7d",
+              "name": "audit_result",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "object"
+            },
+            {
+              "id": "6f84f80c-66ae-4252-9aab-54cef574307e",
+              "name": "website_url",
+              "value": "={{ $('Test Lead Data').item.json.website_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        -464
+      ],
+      "id": "c9e31357-3a2d-4eb8-a965-724e18faf69f",
+      "name": "Parse Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f68e9ecb-7070-4ca0-8f4f-6fb4855a3100",
+              "leftValue": "={{ $json.website_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        -448
+      ],
+      "id": "fd6cdf3c-b46f-4272-b006-ca9e90e52276",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "### Extractor (web-scraper-playwright)",
+        "height": 368,
+        "width": 608,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -528
+      ],
+      "id": "da8645f9-628d-4010-897f-c81dd4c2dc57",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "### Evaluation",
+        "height": 368,
+        "width": 592,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -528
+      ],
+      "id": "a344f212-9dfd-4c09-9b57-c840220867b7",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/audit/evaluate",
+        "sendBody": true,
+        "specifyBody": "={{ JSON.stringify($json) }}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1648,
+        -80
+      ],
+      "id": "af2fd55c-a97c-4899-8c12-a21e4ec4dbeb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1a69668a-1768-4b2c-8f86-ae536be13169",
+              "leftValue": "={{ $json.agency_fit_score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        -80
+      ],
+      "id": "f6913bdd-aa34-4466-a35c-17757e919ef7",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    source: \"website_audit\",\n    audit_result: null,\n    website_url: $('Test Lead Data').first().json.website_url ?? null,\n    _audit_available: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        -288
+      ],
+      "id": "24e46155-f1b9-4537-bf88-8eac17ffec29",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This runs after BOTH Parse Result and No Operation\n// Normalizes the output so Merge always gets clean data\n\nlet auditData = null;\n\ntry {\n  const item = $input.first();\n  const d = item.json;\n\n  // Check if we have real audit data\n  if (d && d.overall_score !== undefined && d.overall_score !== null) {\n    auditData = {\n      overall_score: d.overall_score ?? null,\n      design_score: d.design_score ?? null,\n      functionality_score: d.functionality_score ?? null,\n      seo_score: d.seo_score ?? null,\n      mobile_readiness: d.mobile_readiness ?? null,\n      summary: d.summary ?? null,\n      top_issues: d.top_issues ?? null,\n      recommendation: d.recommendation ?? null\n    };\n  }\n} catch(e) {\n  auditData = null;\n}\n\nreturn [{\n  json: {\n    source: \"website_audit\",\n    audit_result: auditData,\n    website_url: (() => {\n      try { return $('Test Lead Data').first().json.website_url ?? null; }\n      catch(e) { return null; }\n    })(),\n    _audit_available: auditData !== null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -304
+      ],
+      "id": "52f24551-e94b-46c3-b8f8-d3777423b559",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let fb = {};\n\ntry {\n  const item = $input.first();\n  const d = item.json;\n  // Check it's not an error object\n  if (d && !d.error && d.followers !== undefined) {\n    fb = d;\n  }\n} catch(e) {\n  fb = {};\n}\n\nconst hasData = Object.keys(fb).length > 0;\n\nreturn [{\n  json: {\n    source: \"facebook\",\n    followers: fb.followers ?? null,\n    likes: fb.likes ?? null,\n    phone: fb.phone ?? null,\n    email: fb.email ?? null,\n    rating: fb.rating ?? null,\n    ratingOverall: fb.ratingOverall ?? null,\n    ratingCount: fb.ratingCount ?? null,\n    address: fb.address ?? null,\n    services: fb.services ?? null,\n    ad_status: fb.ad_status ?? null,\n    creation_date: fb.creation_date ?? null,\n    category: fb.category ?? null,\n    _fb_available: hasData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        416
+      ],
+      "id": "ccfcd3de-8691-4ac4-b76c-c98f79c76d98",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "let ig = {};\n\ntry {\n  const item = $input.first();\n  const d = item.json;\n  if (d && !d.error && d.followersCount !== undefined) {\n    ig = d;\n  }\n} catch(e) {\n  ig = {};\n}\n\nconst hasData = Object.keys(ig).length > 0;\n\n// Get FB data from whichever node ran\nlet fbData = null;\ntry { fbData = $('FB Success Format').first().json; } catch(e) {}\ntry { if (!fbData) fbData = $('FB Null Format').first().json; } catch(e) {}\n\nreturn [{\n  json: {\n    source: \"instagram\",\n    userName: ig.userName ?? null,\n    followersCount: ig.followersCount ?? null,\n    followsCount: ig.followsCount ?? null,\n    userUrl: ig.userUrl ?? null,\n    _ig_available: hasData,\n    _fb_data: fbData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        416
+      ],
+      "id": "2a19c58d-0ec3-461d-b3a4-ea5ca6856604",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Test Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Has FB Page?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Qualitative Audit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - FB Page Scraper": {
+      "main": [
+        [
+          {
+            "node": "Has IG Profile?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualitative Audit": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Apify - IG Profile Scraper": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Has FB Page?": {
+      "main": [
+        [
+          {
+            "node": "Apify - FB Page Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has IG Profile?": {
+      "main": [
+        [
+          {
+            "node": "Apify - IG Profile Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Branch": {
+      "main": [
+        [
+          {
+            "node": "Master Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request to Web Scraper": {
+      "main": [
+        [
+          {
+            "node": "Audit Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit Success?": {
+      "main": [
+        [
+          {
+            "node": "Groq Vision Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Vision Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request to Web Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Result": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Merge All Branch",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "21390ac5-22f6-474a-888a-187d82269c9d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "715305857ae86e6e233a639d998e90b6dc4ce177710227853f05efc5fbe0fbe2"
+  },
+  "id": "Ha3FBepOHJpdr7b8",
+  "tags": []
+}
